@@ -1,33 +1,18 @@
 package main
 
 import (
-	"errors"
+	"encoding/json"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
 
-	jwtmiddleware "github.com/auth0/go-jwt-middleware"
-	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/fabwi987/irecommend/models"
+	"github.com/fabwi987/irecommend-confirm/models"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
+	uuid "github.com/satori/go.uuid"
 )
-
-var jwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
-	ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
-		decoded := []byte(os.Getenv("AUTH0_CLIENT_SECRET_API"))
-		if len(decoded) == 0 {
-			return nil, errors.New("Missing Client Secret")
-		}
-
-		//Extracting the userID from the jwt token
-		Claim := token.Claims.(jwt.MapClaims)
-		//models.UseridClaim = "admin"
-		models.UseridClaim = Claim["sub"].(string)
-		return decoded, nil
-	},
-})
 
 func main() {
 	err := godotenv.Load()
@@ -37,7 +22,47 @@ func main() {
 
 	r := mux.NewRouter()
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
-	r.Handle("/confirm/{id}", http.FileServer(http.Dir("./views/start")))
 
-	http.ListenAndServe(":7070", handlers.LoggingHandler(os.Stdout, r))
+	r.HandleFunc("/confirm/{id}", LinkHandler)
+	r.HandleFunc("/confirm/interested/{id}", InterestedHandler)
+
+	http.ListenAndServe(":8081", handlers.LoggingHandler(os.Stdout, r))
+}
+
+func LinkHandler(w http.ResponseWriter, r *http.Request) {
+	var client http.Client
+	vars := mux.Vars(r)
+	recommendationid := vars["id"]
+	req, err := http.NewRequest("GET", "http://localhost:3000/recommendations/full/single/"+recommendationid, nil)
+	resp, err := client.Do(req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	defer resp.Body.Close()
+	var rec *models.Recommendation
+
+	if err := json.NewDecoder(resp.Body).Decode(&rec); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	layoutData := struct {
+		PositionTitle     string
+		PositionSubtitle  string
+		PositionText      string
+		Idrecommendations uuid.UUID
+	}{
+		PositionTitle:     rec.Position.Title,
+		PositionSubtitle:  rec.Position.Subtitle,
+		PositionText:      rec.Position.Text,
+		Idrecommendations: rec.Idrecommendations,
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	t, _ := template.ParseFiles("views/landing.html")
+	t.Execute(w, layoutData)
+
+}
+
+func InterestedHandler(w http.ResponseWriter, r *http.Request) {
 }
