@@ -3,9 +3,17 @@ package callback
 import (
 	_ "crypto/sha512"
 	"encoding/json"
+	"html/template"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
+	"strings"
+
+	"github.com/fabwi987/irecommend-confirm/models"
+	uuid "github.com/satori/go.uuid"
+
+	"log"
 
 	"golang.org/x/oauth2"
 )
@@ -54,32 +62,58 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	/* Send to API for update
-
-	recommendation.Referral.ReferralUserID = profile["user_id"].(string)
-	recommendation.Referral.Name = profile["name"].(string)
-	recommendation.Referral.Picture = profile["picture"].(string)
-	recommendation.Referral.ProfileURL = profile["publicProfileUrl"].(string)
-	recommendation.Referral.Headline = profile["headline"].(string)
-
-	var refNew models.Referral
-	refNew.Idreferrals = recommendation.Referral.Idreferrals
-	refNew.Headline = recommendation.Referral.Headline
-	refNew.Mail = recommendation.Referral.Mail
-	refNew.Name = recommendation.Referral.Name
-	refNew.Picture = recommendation.Referral.Picture
-	refNew.ProfileURL = recommendation.Referral.ProfileURL
-	refNew.ReferralUserID = recommendation.Referral.ReferralUserID
-	refNew.Telephone = recommendation.Referral.Telephone
-
-	//To be done by api
-	_, err = models.CurrEnv.Db.UpdateReferral(refNew)
+	var APIclient http.Client
+	req, err := http.NewRequest("GET", os.Getenv("APP_HOST")+"recommendations/full/single/"+r.URL.Query().Get("state"), nil)
+	resp, err = APIclient.Do(req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
+	defer resp.Body.Close()
+	var recommendation *models.Recommendation
+
+	if err := json.NewDecoder(resp.Body).Decode(&recommendation); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	//To be done by api
+	form := url.Values{}
+	form.Add("Idreferrals", recommendation.Referral.Idreferrals.String())
+	form.Add("Headline", profile["headline"].(string))
+	form.Add("Mail", recommendation.Referral.Mail)
+	form.Add("Name", profile["name"].(string))
+	form.Add("Picture", profile["picture"].(string))
+	form.Add("ProfileURL", profile["publicProfileUrl"].(string))
+	form.Add("ReferralUserID", profile["user_id"].(string))
+	form.Add("Telephone", recommendation.Referral.Telephone)
+
+	req, err = http.NewRequest("POST", os.Getenv("APP_HOST")+"referrals/single/"+recommendation.Referral.Idreferrals.String(), strings.NewReader(form.Encode()))
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	resp, err = APIclient.Do(req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	log.Println("Thank you")
+
+	refData := struct {
+		Idrecommendations uuid.UUID
+		IdReferral        uuid.UUID
+		ReferralName      string
+		ReferralPhone     string
+		ReferralMail      string
+		ReferralPicture   string
+	}{
+		Idrecommendations: recommendation.Idrecommendations,
+		IdReferral:        recommendation.Referral.Idreferrals,
+		ReferralName:      profile["name"].(string),
+		ReferralPhone:     recommendation.Referral.Telephone,
+		ReferralMail:      recommendation.Referral.Mail,
+		ReferralPicture:   profile["picture"].(string),
+	}
+
 	w.Header().Set("Content-Type", "text/html")
 	t, _ := template.ParseFiles("views/confirmLinkedin.html")
-	t.Execute(w, recommendation)*/
+	t.Execute(w, refData)
 
 }

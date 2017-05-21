@@ -13,6 +13,20 @@
 </head>
 <body>
 
+<script src="https://cdn.auth0.com/js/lock/10.12.1/lock.min.js"></script>
+<script>
+  var lock = new Auth0Lock('dMWGVZPWg75fG8ImpKYooE0KQQp68Y8d', 'irec.eu.auth0.com', {
+    auth: {
+      redirectUrl: 'http://localhost:8081/callback',
+      responseType: 'code',
+      params: {
+        state: {{.Idrecommendations}},
+        scope: 'openid email'
+      }
+    }
+  });
+</script>
+
 <div class="container">
         <div class="col-xs-12 text-center">
                 <p>{{.PositionTitle}}</p>
@@ -23,11 +37,16 @@
       
       <label for="Name">Interested in hearing more?</label>
       
+       <a onclick="lock.show();" class="btn btn-primary btn-lg btn-login btn-block">Yes please!</a>
+       <p> By submitting you approve that Irecommend store this information </p>
+
         <div class="form-group">
-        <form action="/confirm/interested/{{.Idrecommendations}}" method="get">
-          <button type="submit" class="btn btn-default">Yes please!</button>
+        <form action="/confirm/nonsocial/{{.Idrecommendations}}" method="get">
+          <button type="submit" class="btn btn-default">Yes please, but I don't have LinkedIn</button>
+          <p> By submitting you approve that Irecommend store this information </p>
         </form>
         </div>
+
         <div class="form-group">
         <form action="/tbd make a new recommendation" method="get">
           <button type="submit" class="btn btn-default">No, but I can recommend someone else</button>
