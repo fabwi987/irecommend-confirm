@@ -13,8 +13,6 @@ import (
 	"github.com/fabwi987/irecommend-confirm/models"
 	uuid "github.com/satori/go.uuid"
 
-	"log"
-
 	"golang.org/x/oauth2"
 )
 
@@ -63,7 +61,7 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var APIclient http.Client
-	req, err := http.NewRequest("GET", os.Getenv("APP_HOST")+"recommendations/full/single/"+r.URL.Query().Get("state"), nil)
+	req, err := http.NewRequest("GET", os.Getenv("API_HOST")+"recommendations/full/single/a5fb024d-100e-4c77-938f-a38b89fdba99", nil)
 	resp, err = APIclient.Do(req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -87,14 +85,12 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	form.Add("ReferralUserID", profile["user_id"].(string))
 	form.Add("Telephone", recommendation.Referral.Telephone)
 
-	req, err = http.NewRequest("POST", os.Getenv("APP_HOST")+"referrals/single/"+recommendation.Referral.Idreferrals.String(), strings.NewReader(form.Encode()))
+	req, err = http.NewRequest("POST", os.Getenv("API_HOST")+"referrals/single/"+recommendation.Referral.Idreferrals.String(), strings.NewReader(form.Encode()))
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	resp, err = APIclient.Do(req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-
-	log.Println("Thank you")
 
 	refData := struct {
 		Idrecommendations uuid.UUID

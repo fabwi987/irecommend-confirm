@@ -13,15 +13,14 @@
 </head>
 <body>
 
-<script src="https://cdn.auth0.com/js/lock/10.12.1/lock.min.js"></script>
+<script src="https://cdn.auth0.com/js/lock/10.15/lock.min.js"></script>
 <script>
   var lock = new Auth0Lock('dMWGVZPWg75fG8ImpKYooE0KQQp68Y8d', 'irec.eu.auth0.com', {
     auth: {
-      redirectUrl: 'http://localhost:8081/callback',
+      redirectUrl: 'http://104.236.61.59:8081/callback',
       responseType: 'code',
       params: {
-        state: {{.Idrecommendations}},
-        scope: 'openid email'
+        scope: 'openid email' // Learn about scopes: https://auth0.com/docs/scopes
       }
     }
   });

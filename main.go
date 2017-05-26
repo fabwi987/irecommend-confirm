@@ -32,14 +32,14 @@ func main() {
 	r.HandleFunc("/confirm/nonsocial/{id}", NosocialHandler)
 	r.HandleFunc("/confirm/submit/{id}", SubmitHandler)
 
-	http.ListenAndServe(":8081", handlers.LoggingHandler(os.Stdout, r))
+	http.ListenAndServe(os.Getenv("APP_PORT"), handlers.LoggingHandler(os.Stdout, r))
 }
 
 func LinkHandler(w http.ResponseWriter, r *http.Request) {
 	var client http.Client
 	vars := mux.Vars(r)
 	recommendationid := vars["id"]
-	req, err := http.NewRequest("GET", os.Getenv("APP_HOST")+"recommendations/full/single/"+recommendationid, nil)
+	req, err := http.NewRequest("GET", os.Getenv("API_HOST")+"recommendations/full/single/"+recommendationid, nil)
 	resp, err := client.Do(req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -82,7 +82,7 @@ func NosocialHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	recommendationid := vars["id"]
 	var client http.Client
-	req, err := http.NewRequest("GET", os.Getenv("APP_HOST")+"recommendations/full/single/"+recommendationid, nil)
+	req, err := http.NewRequest("GET", os.Getenv("API_HOST")+"recommendations/full/single/"+recommendationid, nil)
 	resp, err := client.Do(req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -130,7 +130,7 @@ func SubmitHandler(w http.ResponseWriter, r *http.Request) {
 	var client http.Client
 	vars := mux.Vars(r)
 	recommendationid := vars["id"]
-	req, err := http.NewRequest("GET", os.Getenv("APP_HOST")+"recommendations/full/single/"+recommendationid, nil)
+	req, err := http.NewRequest("GET", os.Getenv("API_HOST")+"recommendations/full/single/"+recommendationid, nil)
 	resp, err := client.Do(req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -167,7 +167,7 @@ func SubmitHandler(w http.ResponseWriter, r *http.Request) {
 		form.Add("ProfileURL", rec.Referral.ProfileURL)
 		form.Add("ReferralUserID", rec.Referral.ReferralUserID)
 		form.Add("Telephone", rec.Referral.Telephone)
-		req, err = http.NewRequest("POST", os.Getenv("APP_HOST")+"referrals/single/"+rec.Referral.Idreferrals.String(), strings.NewReader(form.Encode()))
+		req, err = http.NewRequest("POST", os.Getenv("API_HOST")+"referrals/single/"+rec.Referral.Idreferrals.String(), strings.NewReader(form.Encode()))
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 		resp, err = client.Do(req)
 		if err != nil {
@@ -176,7 +176,7 @@ func SubmitHandler(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	req, err = http.NewRequest("POST", os.Getenv("APP_HOST")+"recommendations/single/"+recommendationid, nil)
+	req, err = http.NewRequest("POST", os.Getenv("API_HOST")+"recommendations/single/"+recommendationid, nil)
 	resp, err = client.Do(req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
