@@ -13,12 +13,15 @@ import (
 	"github.com/fabwi987/irecommend-confirm/models"
 	uuid "github.com/satori/go.uuid"
 
+	"log"
+
 	"golang.org/x/oauth2"
 )
 
 func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	domain := os.Getenv("AUTH0_DOMAIN")
+	log.Println(r.URL.Query().Get("state"))
 
 	conf := &oauth2.Config{
 		ClientID:     os.Getenv("AUTH0_CLIENT_ID"),
@@ -61,7 +64,7 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var APIclient http.Client
-	req, err := http.NewRequest("GET", os.Getenv("API_HOST")+"recommendations/full/single/a5fb024d-100e-4c77-938f-a38b89fdba99", nil)
+	req, err := http.NewRequest("GET", os.Getenv("API_HOST")+"recommendations/full/single/"+r.URL.Query().Get("state"), nil)
 	resp, err = APIclient.Do(req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

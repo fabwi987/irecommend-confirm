@@ -20,7 +20,8 @@
       redirectUrl: 'http://104.236.61.59:8081/callback',
       responseType: 'code',
       params: {
-        scope: 'openid email' // Learn about scopes: https://auth0.com/docs/scopes
+        scope: 'openid email', // Learn about scopes: https://auth0.com/docs/scopes
+        state: '{{.Idrecommendations}}'
       }
     }
   });
